@@ -6,15 +6,7 @@ from configurations import LOGGER, FEATURES_SETS
 
 
 parser = argparse.ArgumentParser()
-parser.add_argument('--window_size',
-                    default=100,
-                    help="Number of lags to include in the observation",
-                    type=int)
-parser.add_argument('--max_position',
-                    default=5,
-                    help="Maximum number of positions that are " +
-                         "able to be held in a broker's inventory",
-                    type=int)
+
 
 # TODO -----------------------------------------------------------------------
 
@@ -136,8 +128,16 @@ parser.add_argument('--include_midpoint',type=lambda x:bool(strtobool(x)),
                     default=True,
                     help="Determines if we keep the mointpoint feature in the dataset"
                     )
-
-# 
+                    
+parser.add_argument('--window_size',
+                    default=100,
+                    help="Number of lags to include in the observation",
+                    type=int)
+parser.add_argument('--max_position',
+                    default=5,
+                    help="Maximum number of positions that are " +
+                         "able to be held in a broker's inventory",
+                    type=int)
 
 args = vars(parser.parse_args())
 
