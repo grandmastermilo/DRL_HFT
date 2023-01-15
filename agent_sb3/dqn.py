@@ -3,7 +3,7 @@ import os
 import gym
 import gym_trading
 
-from stable_baselines3 import DQN
+from stable_baselines3 import DQN, PPO, A2C
 
 
 
@@ -12,62 +12,55 @@ class Agent(object):
 
     def __init__(self, 
         is_train = True,
-        number_of_training_steps=1e6, 
-        load_weights=False,
-        visualize=False, 
-        nn_type='mlp', 
+        environment_kwargs:dict = None, 
+        model_kwargs:dict = None,
+        training_kwargs:dict = None,
+        policy_kwargs:dict = None,
         **kwargs):
 
         """
         Agent constructor
-        :param window_size: int, number of lags to include in observation
-        :param max_position: int, maximum number of positions able to be held in inventory
-        :param fitting_file: str, file used for z-score fitting
-        :param testing_file: str,file used for dqn experiment
-        :param env: environment name
-        :param seed: int, random seed number
-        :param action_repeats: int, number of steps to take in environment between actions
-        :param number_of_training_steps: int, number of steps to train agent for
-        :param gamma: float, value between 0 and 1 used to discount future DQN returns
-        :param format_3d: boolean, format observation as matrix or tensor
-        :param train: boolean, train or test agent
-        :param load_weights: boolean, import existing weights
-        :param z_score: boolean, standardize observation space
-        :param visualize: boolean, visualize environment
-        :param dueling_network: boolean, use dueling network architecture
-        :param double_dqn: boolean, use double DQN for Q-value approximation
+        
+        @param is_train 
+        @param environment_kwargs: paramters for the environment - checkout the gym environment
+        @param model_kwargs: parameters for the agent - dependant on the sb3 agent constructor
+        @param training_kwargs: paramters to start training the aget 
+        @param policy_kwargs: parameters to define the custom policy network  
+    
         """
         # Agent arguments
+        self.model_kwargs = model_kwargs
+        self.training_kwargs = training_kwargs
+        self.policy_kwargs = policy_kwargs
+        self.environment_kwargs = environment_kwargs
+
         self.kwargs = kwargs
         self.train = is_train
 
-        # self.env_name = id
-        self.neural_network_type = nn_type
-        self.load_weights = load_weights
-        self.number_of_training_steps = number_of_training_steps
-        self.visualize = visualize
+        self.rl_algos = {
+            'dqn':DQN,
+            'ppo':PPO,
+            'a2c':A2C
+            }
+
+
+        self.visualize = False
 
         # Create environment
-        self.env = gym.make(**kwargs)
-        self.env_name = self.env.env.id
-
-        # Create agent
-        # NOTE: 'Keras-RL' uses its own frame-stacker -- this should be happening in the env
-        self.memory_frame_stack = 1  # Number of frames to stack e.g., 1.
+        self.env = gym.make(**self.environment_kwargs)
+        self.env_name = self.kwargs['env_id']
         
         self.cwd = os.path.dirname(os.path.realpath(__file__))
 
         # create the agent
         if True:
-            self.agent = DQN(
+            self.agent = self.rl_algos[self.kwargs['agent']](
                 policy="MlpPolicy",
                 env=self.env,
-                buffer_size=int(1e5),
-                # learning_rate = kwargs['learning_rate'],
-                gamma=kwargs['gamma'],
-                seed=kwargs['seed'],
-                device='cuda:0'
-                )
+                device='cuda:0',
+                **self.model_kwargs
+            )
+
         else:
             raise Exception('Not implimented')
 
@@ -98,10 +91,7 @@ class Agent(object):
 
         if self.load_weights:
             raise Exception("Not implemented but may be usefull for continual training")
-            # LOGGER.info('...loading weights for {} from\n{}'.format(
-            #     self.env_name, weights_filename))
-            # self.agent.load_weights(weights_filename)
-
+    
         if self.train:
             step_chkpt = '{step}.h5f'
             step_chkpt = 'dqn_{}_weights_{}'.format(self.env_name, step_chkpt)
@@ -124,9 +114,3 @@ class Agent(object):
             LOGGER.info('Saving AGENT weights...')
             # self.agent.save_weights(weights_filename, overwrite=True)
             LOGGER.info("AGENT weights saved.")
-
-
-        else:
-            raise Exception('Not yet implimented ')
-            # LOGGER.info('Starting TEST...')
-            # self.agent.test(self.env, nb_episodes=2, visualize=self.visualize)
