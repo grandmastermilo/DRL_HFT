@@ -1,0 +1,16 @@
+matplotlib
+scikit-learn
+requests
+numpy
+pandas
+gym
+sortedcontainers
+websockets
+h5py
+more-itertools
+pymongo
+pytest
+python-dateutil
+pytz
+scipy
+tzlocal
